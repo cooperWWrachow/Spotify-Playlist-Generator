@@ -140,19 +140,6 @@ def get_album_track_ids(sp: object, IDarr: list[str]) -> list[str]:
             all_tracks.append(cur)
     return all_tracks
 
-# def get_artists_tracks(sp, IDarr):
-    
-#     artist_id = IDarr[0]
-#     all_tracks = []
-#     # Retrieve albums of the artist
-#     albums = sp.artist_albums(artist_id, album_type='album')
-#     for album in albums['items']:
-#         # Retrieve tracks of each album
-#         tracks = sp.album_tracks(album['id'])
-#         for track in tracks['items']:
-#             all_tracks.append(track['id'])
-#     return all_tracks
-
 if __name__ == '__main__':
     app.run(debug=True)
 
