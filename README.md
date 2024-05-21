@@ -9,5 +9,5 @@ within the different sound aspects of individual songs. If the song succeeds the
 in the playlist. 
 
 
-Currently, this is just a Python script with Flask to help with authentication, but I do have the goals of turning 
-it into a legitimate web app for humans to utilize. 
+Currently, all the functionalityof generting the playlist is complete and can be ran on a server through command line. 
+My next goal in the time being is to turn it into a functional website for users.
