@@ -1,0 +1,6 @@
+<h1>Success</h1>
+
+{% if error %}
+    <p>{{error}}</p>
+    <a href="{{url_for('color')}}">Restart</a>
+{% endif %}

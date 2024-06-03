@@ -1,0 +1,13 @@
+<h1>Select albums for playlist</h1>
+
+<form method="POST">
+    <select name="artist-albums" id="artist-albums" multiple>
+        {% for album in albums %}
+            <option value="{{loop.index0}}">{{album}}</option>
+        {% endfor %}
+    </select>
+    <br>
+    <a href="{{url_for('artists')}}">back</a>
+    <button type="submit">Complete</button>
+
+</form>

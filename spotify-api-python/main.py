@@ -1,10 +1,12 @@
-from flask import Flask, request, redirect
+import time
+from flask import Flask, render_template, request, redirect, session, url_for
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from fuzzywuzzy import fuzz
 import base64
 
 app = Flask(__name__)
+app.secret_key = "236910"
 
 # Load environment variables
 from dotenv import load_dotenv
@@ -22,42 +24,21 @@ sp_oauth = SpotifyOAuth(client_id=CLIENT_ID,
 
 # redirect_uri="http://192.168.1.128:5000/callback",
 
+# retrieve access token from the session 
 def get_access_token() -> str:
-    # grab token dictionary
-    token_info = sp_oauth.get_cached_token() # dictionary
-    if token_info is None:
-        code = request.args.get('code')
-        token_info = sp_oauth.get_access_token(code)
-        access_token = token_info['access_token']
-    else:
-        access_token = token_info['access_token']
-    return access_token
+    token_info = session.get('token_info', None)
 
-def get_color(colors: list[str]) -> str:
-    while True:
-        print("Red | Yellow | Green | Blue | Purple | Orange | Black")
-        color = input("Please enter a color: ").strip().lower()
-        if color in colors:
-            return color
-        else:
-            print("Invalid color. Please enter a valid color.")
+    if not token_info:
+        return None
+    # check expiration date (may not be needed in future)
+    now = int(time.time())
+    is_token_expired = token_info['expires_at'] - now < 60
 
-# requests artists names from user based on number of artists. passes artists through info function for name + ID
-def artists_confirm (sp: object, num: int) -> list[dict]:
-    artist_names = []
-    
-    for i in range(0, num):
-        artist = input("Enter Name: ")
-        artist_names.append(artist)
-        # final names of artists
-    artist_ids = []
+    if is_token_expired:
+        token_info = sp_oauth.refresh_access_token(token_info['refresh_token'])
+        session['token_info'] = token_info
 
-    # pass each name into info function to get id too
-    for name in artist_names:
-        artist_id = get_artist_info(sp, name)
-        artist_ids.append(artist_id)
-
-    return artist_ids
+    return token_info['access_token']
 
 # takes in an artist name and returns the ID of the artist
 def get_artist_info(sp: object, name: str) -> dict:
@@ -92,21 +73,6 @@ def get_artists_albums(sp: object, IDarr: list[str]) -> list[dict]:
                 count += 1
     return artist_albums
 
-def get_user_albums(numArr: list[str], albums: list[str]) -> list[str]:
-    # holds final list of album ids
-    album_id_lis = []
-    # Iterate over user selected numbers
-    for num in numArr:
-        # Convert to int because dictionary header is int
-        num = int(num)
-        # Iterate over albums
-        for album in albums:
-            # if album number matches then append
-            if num in album:
-                album_id_lis.append(album[num][1]) 
-                break
-    return album_id_lis
-
 # search for each album and create list of song ID's
 def get_album_track_ids(sp: object, IDarr: list[str]) -> list[str]:
     all_tracks = []
@@ -121,12 +87,10 @@ def get_track_values(sp: object, IDarr: list[str]) -> list[dict]:
     tracks_values = []
     for track in IDarr:
     # track = IDarr[0]
-        track_values = sp.audio_features(track)
-        # d = track_values[0]['danceability']
-        e = track_values[0]['energy']
-        v = track_values[0]['valence']
-        t = track_values[0]['tempo']
-        element = {track: ({"e":e}, {"v":v}, {"t":t})}
+        track_features = sp.audio_features(track)
+        e = track_features[0]['energy']
+        v = track_features[0]['valence']
+        element = {track: ({"e":e}, {"v":v})}
         tracks_values.append(element)
     return tracks_values
 
@@ -193,65 +157,179 @@ def create_playlist(sp: object, nameArr: list[str], idArr: list[str], color: str
     sp.user_playlist_add_tracks(user_id, pID, idArr)
 
     return 
+
+
 # when we go to base route, we run ths index function which authorizes
 @app.route('/')
 def index():
+    return render_template('home.html')
+
+@app.route('/login')
+def login():
     auth_url = sp_oauth.get_authorize_url()
     return redirect(auth_url)
 
 @app.route('/callback')
-def callback(): 
+def callback():
 
-    #  grab access token
+    token_info = sp_oauth.get_cached_token() # dictionary
+    if token_info is None:
+        code = request.args.get('code')
+        token_info = sp_oauth.get_access_token(code)
+
+    # handles deprecation warning between dict and string for future refernece
+    if isinstance(token_info, dict):
+        # If token_info is a dictionary, store it in the session as usual
+        session['token_info'] = token_info
+    else:
+        # If token_info is a string (future behavior), get the full token info from cache
+        session['token_info'] = sp_oauth.get_cached_token()
+
+    return redirect(url_for('color'))
+
+@app.route('/color-picker', methods=['GET', 'POST'])
+def color(): 
     access_token = get_access_token()
-    sp = spotipy.Spotify(auth=access_token)
-
+    if not access_token:
+        return redirect(url_for('login'))
 
     colors = ["red", "blue","yellow","green","orange","purple","black"]
-    color = get_color(colors)
 
-    # retrieve user input (neglecting spaces right now)
-    num = int(input("How many artists would you like to add? (1 or more): "))
-    print("When using spaces, surround entire name with quotes!!!")
-    print("The more specific the better the more accurate the results.")
+    # sp = spotipy.Spotify(auth=access_token)
+    if request.method == 'POST':
+        user_color = request.form['user-color'].strip().lower()
+        artist_count = request.form['artist-count'].strip()
+        
+        # error checking for both inputs 
+        if user_color not in colors:
+            error = "Please enter a valid color."
+            return render_template('color-picker.html', error=error)
+        
+        if not artist_count.isdigit() or int(artist_count) < 1:
+            error = "Enter 1 or more artists please."
+            return render_template('color-picker.html', error=error)
 
-    stop = True
-    while (stop):
-        artist_ids = []
-        artist_names = []
-        # EX: [{ID: NAME}, {ID2: NAME}, ...]
-        artist_info = artists_confirm(sp, num)
-        for info in artist_info:
-            for key, value in info.items():
-                print(value)
-                artist_names.append(value)
-                artist_ids.append(key)
-        # print(artist_info)
-        confirmation = input("are these the correct artist (y/n)? ").lower()
-        if confirmation == 'y' or confirmation == 'yes':
-            stop = False
-        if stop == True:
-            print("Please re-enter your artist more specifically.")
+        # store values in the session
+        session['user_color'] = user_color
+        session['artist_count'] = artist_count
 
-    # get each artists' albums
-    albums = get_artists_albums(sp, artist_ids)
-    # display proper key value pair to user excluding ID. ie.; 1: album name
-    for album in albums:
+        return redirect(url_for('artists'))
+    
+    return render_template('color-picker.html')
+
+@app.route('/choose-artists', methods=['GET', 'POST'])
+def artists():
+
+    access_token = get_access_token()
+    if not access_token:
+        return redirect(url_for('login'))
+
+    # retrive artist count from session
+    count = int(session['artist_count'])
+    
+    artists = []
+    if request.method == 'POST':
+        for num in range(count):
+            artists.append(request.form[f'artist-{num}'])
+        
+        session['user_artists'] = artists
+
+        return redirect(url_for('confirm'))
+
+    # passed count to the template (jinja2)
+    return render_template('choose-artists.html', count=count)
+
+
+@app.route('/artist-confirmation')
+def confirm():
+    access_token = get_access_token()
+    if not access_token:
+        return redirect(url_for('login'))
+    
+    sp = spotipy.Spotify(auth=access_token)
+
+    user_artists = session['user_artists']
+
+    info = []
+    # pass each name into info function to get id too
+    for name in user_artists:
+        artist_info = get_artist_info(sp, name)
+        info.append(artist_info)
+    
+    # create list of just names for html
+    artists_names = []
+    artist_ids = []
+    for i in info:
+        for key, value in i.items():
+            artists_names.append(value)
+            artist_ids.append(key)
+
+    session['confirmed_names'] = artists_names
+    session['artists_ids'] = artist_ids
+
+    return render_template('artist-confirmation.html', names=artists_names)
+
+@app.route('/choose-albums', methods=['GET', 'POST'])
+def albums():
+
+    access_token = get_access_token()
+    if not access_token:
+        return redirect(url_for('login'))
+    
+    sp = spotipy.Spotify(auth=access_token)
+
+    artists_ids = session['artists_ids']
+    # EX: {1: (name, id, type)}
+    album_info = get_artists_albums(sp, artists_ids)
+    
+    albums = []
+    ids = []
+    for album in album_info:
         for key, value in album.items():
-            album_num = key
-            album_name = value[0]
-            print(f"{album_num}: {album_name}")
-    # print(albums)
+            # two lists (albums is just album names)
 
-    # get user album numbers in an array
-    album_nums = input("Enter the numbers of each corresponding album (spaces in between): ")
-    final_nums = album_nums.split()
+            albums.append(value[0])
+            ids.append({key: value[1]})
+
+    # store album ids
+    session['album_ids'] = ids
+
+    if request.method == 'POST':
+        # getlist grabs list of indexes
+        user_albums  = request.form.getlist('artist-albums')
+        # store user choices from multiselect
+        session['user_choices'] = user_albums
+        return redirect(url_for('success'))
+            
+    return render_template('choose-albums.html', albums=albums)
 
 
-    album_id_lis = get_user_albums(final_nums, albums)
+@app.route('/success')
+def success():
+    access_token = get_access_token()
+    if not access_token:
+        return redirect(url_for('login'))
+    
+    sp = spotipy.Spotify(auth=access_token)
 
-    all_tracks = get_album_track_ids(sp, album_id_lis)
+    user_color = session['user_color']
+    artist_names = session['confirmed_names']
 
+    final_albums = []
+    ids = session['album_ids']
+    choices = session['user_choices']
+    for i in ids:
+        for k,v in i.items():
+            for choice in choices:
+                if choice == k:
+                    final_albums.append(v)
+                else:
+                    continue
+    
+    # grab each track from all albums
+    all_tracks = get_album_track_ids(sp, final_albums)
+
+    # get energy and valence for each track
     all_tracks_values = get_track_values(sp, all_tracks)
 
     # gets final tracks for playlist
@@ -261,15 +339,20 @@ def callback():
         for tID, tVal in track.items():
             e = tVal[0]['e']
             v = tVal[1]['v']
-            # print(f"{d}, {e}, {v}, {t}")
-            result = color_test(color, e, v)
+            result = color_test(user_color, e, v)
             # if track succeeds then append to list
             if (result):
                 passing_tracks.append(tID)
+            else:
+                continue
+    
+    if passing_tracks == []:
+        error = "No Songs matched the color. Please go back and try again."
+        return render_template('success.html', error=error)
+    
+    create_playlist(sp, artist_names, passing_tracks, user_color)
 
-    create_playlist(sp, artist_names, passing_tracks, color)
-
-    return "Authenticated successfully!"
+    return render_template('success.html', error=error)
 
 
 
