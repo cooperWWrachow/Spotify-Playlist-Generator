@@ -8,7 +8,5 @@ one of the color options to define the "sound" of their new playlist. Each color
 within the different sound aspects of individual songs. If the song succeeds the aspects of the color, then it is placed 
 in the playlist. 
 
+Here is a demo below:
 
-The app is fully usable at {URL}. As soon as you press begin, you will be prompted to sign into your Spotify accounf (unless
-already signed in). From there you will follow along and complete the process of building out your very own 
-custom playlist!! Enjoy!
