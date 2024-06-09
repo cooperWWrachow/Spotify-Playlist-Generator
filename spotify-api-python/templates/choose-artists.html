@@ -1,19 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <h1>Enter Artist Names</h1>
+{% extends 'main.html' %}
+
+{% block content %}
+    <h1>Enter Artists</h1>
     <form method="POST">
-        {% for num in range(count) %}
-        <input type="text" id="artist-{{num}}" name="artist-{{num}}" required>
-        <br>
-        {% endfor %}
-        <a href="{{url_for('color')}}">back</a>
-        <button type="submit">Submit</button>
+        <div class="scrollable">
+            <div class="artists-input">
+                {% for num in range(count) %}
+                    <input type="text" id="artist-{{num}}" name="artist-{{num}}" required>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="buttons">
+            <!-- allows me to go back without filling fields in. Button by default submits -->
+            <button class="btn" onclick="window.location.href='{{url_for('color')}}'">&#8617</button>
+            <div class="divider"></div>
+            <button class="btn" submit">&#8618</button>
+        </div>
     </form>
-</body>
-</html>
+{% endblock %}

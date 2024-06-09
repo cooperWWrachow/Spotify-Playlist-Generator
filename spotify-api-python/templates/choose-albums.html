@@ -1,13 +1,18 @@
-<h1>Select albums for playlist</h1>
+{% extends 'main.html' %}
 
-<form method="POST">
-    <select name="artist-albums" id="artist-albums" multiple>
-        {% for album in albums %}
-            <option value="{{loop.index0}}">{{album}}</option>
-        {% endfor %}
-    </select>
-    <br>
-    <a href="{{url_for('artists')}}">back</a>
-    <button type="submit">Complete</button>
-
-</form>
+{% block content %}
+    <h1>Albums</h1>
+    <form method="POST">
+        <select name="artist-albums" id="artist-albums" multiple>
+            {% for album in albums %}
+                <option value="{{loop.index}}">{{album}}</option>
+            {% endfor %}
+        </select>
+        <div class="buttons">
+            <!-- allows me to go back without filling fields in. Button by default submits -->
+            <a href="{{ url_for('confirm') }}" class="btn1">&#8617</a>
+            <div class="divider"></div>
+            <button class="btn" type="submit">&#8618;</button>
+        </div>
+    </form>
+{% endblock %}

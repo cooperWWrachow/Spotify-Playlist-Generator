@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ColorPy</title>
+    <!-- style sheet link in flask -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='mediaqueries.css') }}">
+</head>
+<body>
+    <div class="main-container main">
+        <div class="color-picker-all">
+            {% block content %}
+
+            {% endblock %}
+            <!-- FOOTER -->
+            <footer>
+                <!-- sign for copyright symbol -->
+                <p>Copyright &#169; 2024 Cooper Rachow. All Rights Reserved</p>
+            </footer>
+        </div>
+    </div>
+</body>
+</html>
+

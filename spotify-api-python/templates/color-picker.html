@@ -1,24 +1,34 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Color Playlist</title>
-</head>
-<body>
+{% extends 'main.html' %}
+
+{% block content %}
+
     <h1>Let's Begin!</h1>
-    <h5>Choose any color: Red | Orange | Yellow | Green | Blue | Purple | Black</h5>
+    <p>
+        <span class="circle" style="color:red">&#9679</span>
+        <span class="circle" style="color:orange">&#9679</span>
+        <span class="circle" style="color:yellow">&#9679</span>
+        <span class="circle" style="color:green">&#9679</span>
+        <span class="circle" style="color:blue">&#9679</span>
+        <span class="circle" style="color:purple">&#9679</span>
+        <span class="circle" style="color:black">&#9679</span>  
+    </p>
     {% if error %}
-        <p>{{ error }}</p>
+        <p class="error">{{ error }}</p>
     {% endif %}
-    <form method="POST">
-        <label for="user_color">Enter a Color: </label>
-        <input type="text" id="user-color" name="user-color" required>
-        <br>
-        <label for="artist_count">Number of Artists: </label>
-        <input type="text" id="artist-count" name="artist-count" required>
-        <br>
-        <button type="submit">Next</button>
-    </form>
-</body>
-</html>
+    <div class="color-prompts">
+        <form method="POST">
+            <h3>Enter a Color:</h3>
+            <input type="text" id="user-color" name="user-color" class="user-inputs">
+            <br>
+            <h3>Number of Artists:</h3>
+            <input type="text" id="artist-count" name="artist-count" class="user-inputs" required>
+            
+            <div class="btn-container">
+                <button type="submit" class="btn">&#8618;</button>
+            </div>
+        </form>
+    </div>
+   
+{% endblock %}
+
+&#x2192

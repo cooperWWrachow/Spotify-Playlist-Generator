@@ -171,21 +171,24 @@ def login():
 
 @app.route('/callback')
 def callback():
+    try:
+        token_info = sp_oauth.get_cached_token() # dictionary
+        if token_info is None:
+            code = request.args.get('code')
+            token_info = sp_oauth.get_access_token(code)
 
-    token_info = sp_oauth.get_cached_token() # dictionary
-    if token_info is None:
-        code = request.args.get('code')
-        token_info = sp_oauth.get_access_token(code)
+        # handles deprecation warning between dict and string for future refernece
+        if isinstance(token_info, dict):
+            # If token_info is a dictionary, store it in the session as usual
+            session['token_info'] = token_info
+        else:
+            # If token_info is a string (future behavior), get the full token info from cache
+            session['token_info'] = sp_oauth.get_cached_token()
 
-    # handles deprecation warning between dict and string for future refernece
-    if isinstance(token_info, dict):
-        # If token_info is a dictionary, store it in the session as usual
-        session['token_info'] = token_info
-    else:
-        # If token_info is a string (future behavior), get the full token info from cache
-        session['token_info'] = sp_oauth.get_cached_token()
-
-    return redirect(url_for('color'))
+        return redirect(url_for('color'))
+    except Exception as e:
+        error = f"An unexpected error has occurred during the authentication process: {str(e)}"
+        return render_template('error.html', error=error)
 
 @app.route('/color-picker', methods=['GET', 'POST'])
 def color(): 
@@ -202,7 +205,7 @@ def color():
         
         # error checking for both inputs 
         if user_color not in colors:
-            error = "Please enter a valid color."
+            error = "Please enter a valid color from above."
             return render_template('color-picker.html', error=error)
         
         if not artist_count.isdigit() or int(artist_count) < 1:
@@ -227,6 +230,7 @@ def artists():
     # retrive artist count from session
     count = int(session['artist_count'])
     
+    # creates list of user submitted artists and puts in session
     artists = []
     if request.method == 'POST':
         for num in range(count):
@@ -242,121 +246,138 @@ def artists():
 
 @app.route('/artist-confirmation')
 def confirm():
-    access_token = get_access_token()
-    if not access_token:
-        return redirect(url_for('login'))
-    
-    sp = spotipy.Spotify(auth=access_token)
+    try:
+        access_token = get_access_token()
+        if not access_token:
+            return redirect(url_for('login'))
+        
+        sp = spotipy.Spotify(auth=access_token)
 
-    user_artists = session['user_artists']
+        user_artists = session['user_artists']
 
-    info = []
-    # pass each name into info function to get id too
-    for name in user_artists:
-        artist_info = get_artist_info(sp, name)
-        info.append(artist_info)
-    
-    # create list of just names for html
-    artists_names = []
-    artist_ids = []
-    for i in info:
-        for key, value in i.items():
-            artists_names.append(value)
-            artist_ids.append(key)
+        info = []
+        # pass each name into info function to get id too
+        for name in user_artists:
+            artist_info = get_artist_info(sp, name)
+            info.append(artist_info)
+        
+        # create list of just names for html
+        artists_names = []
+        artist_ids = []
+        for i in info:
+            for key, value in i.items():
+                artists_names.append(value)
+                artist_ids.append(key)
 
-    session['confirmed_names'] = artists_names
-    session['artists_ids'] = artist_ids
+        session['confirmed_names'] = artists_names
+        session['artists_ids'] = artist_ids
 
-    return render_template('artist-confirmation.html', names=artists_names)
+        return render_template('artist-confirmation.html', names=artists_names)
+    except Exception as e:
+        error = f"An unexpected error has occurred while retrieving the artists: {str(e)}"
+        session.clear()
+        return render_template('error.html', error=error)
 
 @app.route('/choose-albums', methods=['GET', 'POST'])
 def albums():
+    try:
+        access_token = get_access_token()
+        if not access_token:
+            return redirect(url_for('login'))
+        
+        sp = spotipy.Spotify(auth=access_token)
 
-    access_token = get_access_token()
-    if not access_token:
-        return redirect(url_for('login'))
-    
-    sp = spotipy.Spotify(auth=access_token)
+        artists_ids = session['artists_ids']
+        # EX: {1: (name, id, type)}
+        album_info = get_artists_albums(sp, artists_ids)
+        
+        albums = []
+        ids = []
+        for album in album_info:
+            for key, value in album.items():
+                # two lists (albums is just album names)
 
-    artists_ids = session['artists_ids']
-    # EX: {1: (name, id, type)}
-    album_info = get_artists_albums(sp, artists_ids)
-    
-    albums = []
-    ids = []
-    for album in album_info:
-        for key, value in album.items():
-            # two lists (albums is just album names)
+                albums.append(value[0])
+                ids.append({key: value[1]})
 
-            albums.append(value[0])
-            ids.append({key: value[1]})
+        # store album ids
+        session['album_ids'] = ids
 
-    # store album ids
-    session['album_ids'] = ids
-
-    if request.method == 'POST':
-        # getlist grabs list of indexes
-        user_albums  = request.form.getlist('artist-albums')
-        # store user choices from multiselect
-        session['user_choices'] = user_albums
-        return redirect(url_for('success'))
-            
-    return render_template('choose-albums.html', albums=albums)
+        if request.method == 'POST':
+            # getlist grabs list of indexes
+            user_albums  = request.form.getlist('artist-albums')
+            # store user choices from multiselect
+            session['user_choices'] = user_albums
+            return redirect(url_for('success'))
+                
+        return render_template('choose-albums.html', albums=albums)
+    except Exception as e:
+        error = f"An unexpected error has occurred while retrieving the albums: {str(e)}"
+        session.clear()
+        return render_template('error.html', error=error)
 
 
 @app.route('/success')
 def success():
-    access_token = get_access_token()
-    if not access_token:
-        return redirect(url_for('login'))
-    
-    sp = spotipy.Spotify(auth=access_token)
+    try:
+        access_token = get_access_token()
+        if not access_token:
+            return redirect(url_for('login'))
+        
+        sp = spotipy.Spotify(auth=access_token)
 
-    user_color = session['user_color']
-    artist_names = session['confirmed_names']
+        user_color = session['user_color']
+        artist_names = session['confirmed_names']
 
-    final_albums = []
-    ids = session['album_ids']
-    choices = session['user_choices']
-    for i in ids:
-        for k,v in i.items():
-            for choice in choices:
-                if choice == k:
-                    final_albums.append(v)
+        final_albums = []
+        ids = session['album_ids']
+        choices = session['user_choices']
+        for i in ids:
+            for k,v in i.items():
+                for choice in choices:
+                    if choice == k:
+                        final_albums.append(v)
+                    else:
+                        continue
+        
+        # grab each track from all albums
+        all_tracks = get_album_track_ids(sp, final_albums)
+        
+        # get energy and valence for each track
+        all_tracks_values = get_track_values(sp, all_tracks)
+
+        # gets final tracks for playlist
+        passing_tracks = []
+        for track in all_tracks_values:
+            # grab desired values for the track and pass thru test function
+            for tID, tVal in track.items():
+                e = tVal[0]['e']
+                v = tVal[1]['v']
+                result = color_test(user_color, e, v)
+                # if track succeeds then append to list
+                if (result):
+                    passing_tracks.append(tID)
                 else:
                     continue
-    
-    # grab each track from all albums
-    all_tracks = get_album_track_ids(sp, final_albums)
+        
+        if passing_tracks == []:
+            error = "No Songs matched the color. Please try again and be more specific."
+            session.clear()
+            return render_template('error.html', error=error)
+        
+        create_playlist(sp, artist_names, passing_tracks, user_color)
 
-    # get energy and valence for each track
-    all_tracks_values = get_track_values(sp, all_tracks)
+        session.clear()
 
-    # gets final tracks for playlist
-    passing_tracks = []
-    for track in all_tracks_values:
-        # grab desired values for the track and pass thru test function
-        for tID, tVal in track.items():
-            e = tVal[0]['e']
-            v = tVal[1]['v']
-            result = color_test(user_color, e, v)
-            # if track succeeds then append to list
-            if (result):
-                passing_tracks.append(tID)
-            else:
-                continue
-    
-    if passing_tracks == []:
-        error = "No Songs matched the color. Please go back and try again."
-        return render_template('success.html', error=error)
-    
-    create_playlist(sp, artist_names, passing_tracks, user_color)
-
-    return render_template('success.html', error=error)
+        return render_template('success.html')
+    except Exception as e:
+        error = f"An unexpected error has occurred while generating your playlist: {str(e)}"
+        session.clear()
+        return render_template('error.html', error=error)
 
 
 
 if __name__ == '__main__':
     app.run(debug=True)
-    # app.run(host='192.168.1.128', port=5000)
+    # app.run(host='192.168.1.168', port=5000)
 

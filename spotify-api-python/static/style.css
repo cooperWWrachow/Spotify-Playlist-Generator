@@ -1,0 +1,247 @@
+/* MAIN */
+*{
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+a{
+    text-decoration: none;
+}
+
+body {
+    margin: 0;
+}
+
+/* home */
+
+.home-page button{
+    color: green;
+    background-color: black;
+    border: 3px green solid;
+    font-size: 50px;
+    font-weight: bold;
+    margin: auto;
+    border-radius: 50%;
+    padding: 20px;
+}
+
+.home-page button:hover{
+    color: red;
+    background-color: black;
+    border-color: red;
+    cursor: crosshair;
+    transition: 0.3s;
+}
+
+/* main */
+.main-container{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* height: 100vh; */
+    position: relative;
+    background-color: black;
+}
+
+.other-main{
+    height: 100vh;
+}
+
+.color-picker-all{
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem 1.5rem 1.5rem 1.5rem;
+    text-align: center;
+    background-color: grey;
+    border: 5px green solid;
+    border-radius: 25px;
+}
+
+
+.color-picker-all h1{
+    font-size: 40px;
+    color: black;
+    padding: 0;
+}
+
+/* color-picker */
+.circle{
+    font-size: 40px;
+}
+
+.user-inputs{
+    color: white;
+    background-color: black;
+    font-size: 20px;
+    text-align: center;
+    padding: 5px;
+    width: 80%;
+    border: 3px green dotted;
+}
+
+.btn-container{
+    padding-top: 1rem;
+}
+
+.btn{
+    color: green;
+    background-color: black;
+    border: 2px green solid;
+    font-size: 40px;
+    font-weight: bold;
+    margin: auto;
+    border-radius: 50%;
+    padding-left: 15px;
+    padding-right: 15px;
+    
+}
+
+.btn:hover{
+    color: red;
+    background-color: black;
+    border-color: red;
+    cursor: crosshair;
+    transition: 0.3s;
+}
+
+.btn1 {
+    color: green;
+    background-color: black;
+    border: 2px green solid;
+    font-size: 40px;
+    font-weight: bold;
+    margin: auto;
+    border-radius: 50%;
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-bottom: 4.5px;
+}
+
+.btn1:hover{
+    color: red;
+    background-color: black;
+    border-color: red;
+    cursor: crosshair;
+    transition: 0.3s;
+}
+
+.error{
+    color: red;
+    font-size: 15px;
+}
+
+/* choose-artists */
+.buttons{
+    padding: 1rem;
+}
+
+.divider{
+    width:5px;
+    height:auto;
+    display:inline-block;
+}
+
+.scrollable{
+    height: 200px;
+    overflow-y: auto;
+}
+
+.artists-input{
+    column-count: 1;
+    column-gap: 20px;
+}
+
+.artists-input input {
+    /* each input takes up the full width within its column */
+    display: block; 
+    width: 100%; 
+    margin-bottom: 10px;
+    box-sizing: border-box; 
+    font-size: 20px;
+    border: 3px green dotted;
+    background-color: black;
+    color: white;
+    text-align: center;
+    padding: 5px;
+}
+
+/* confirm artists */
+.names {
+    color: white;
+    font-weight: bold;
+    font-size: 20px;
+    
+}
+/* choose albums */
+select {
+    width: 90%;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 16px;
+    background-color: black;
+    cursor: pointer;
+    overflow-x: auto;
+}
+
+option {
+    padding: 10px;
+    color: white;
+}
+
+select:focus {
+    outline: none;
+    border-color: black; 
+}
+
+/* Vertical scrollbar */
+::-webkit-scrollbar, ::-webkit-scrollbar:horizontal {
+    width: 7px;
+    height: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track, ::-webkit-scrollbar-track:horizontal {
+    box-shadow: inset 0 0 5px grey; 
+    border-radius: 10px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb, ::-webkit-scrollbar-thumb:horizontal {
+    background: green; 
+    border-radius: 10px;
+}
+  
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover, ::-webkit-scrollbar-thumb:horizontal:hover {
+    transition: 0.8s;
+    background: rgb(2, 77, 2); 
+    cursor: crosshair;
+}
+
+option:hover, select:hover, ::-webkit-scrollbar-track:hover, ::-webkit-scrollbar-track:horizontal:hover{
+    cursor: crosshair;
+}
+
+/* success */
+.home-page{
+    text-align: center;
+}
+.home-page h1{
+    color: white;
+}
+
+.home-page p {
+    color: white;
+    font-size: 12px;
+}
+
+/* error */
+.home-page h5{
+    color: white;
+}
+
+
+/* footer */
+footer {
+    color: rgb(211, 207, 207);
+    font-size: x-small;
+}

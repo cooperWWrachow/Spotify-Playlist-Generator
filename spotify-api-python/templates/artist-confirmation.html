@@ -1,7 +1,17 @@
-<h2>Please confirm that these are your artists:</h2>
-{% for name in names %}
-    <p>{{name}}</p>
-{%  endfor %}
+{% extends 'main.html' %}
 
-<a href="{{ url_for('artists')}}">No</a>
-<a href="{{ url_for('albums')}}">Yes</a>
+{% block content %}
+    <h1>Confirm</h1>
+    <div class="scrollable">
+        <div class="names">
+            {% for name in names %}
+                <p>{{name}}</p>
+            {%  endfor %}
+        </div>
+    </div>
+    <div class="buttons">
+        <button class="btn" onclick="window.location.href='{{url_for('artists')}}'">&#8617</button>
+        <div class="divider"></div>
+        <button class="btn" onclick="window.location.href='{{url_for('albums')}}'">&#8618;</button>
+    </div>
+{% endblock %}

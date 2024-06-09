@@ -1,6 +1,15 @@
-<h1>Success</h1>
+{% extends 'other-main.html' %}
 
-{% if error %}
-    <p>{{error}}</p>
-    <a href="{{url_for('color')}}">Restart</a>
-{% endif %}
+{% block content %}
+
+<div class="home-page">
+    <h1 class="success">Enjoy your new playlist!</h1>
+    <p>You will be redirected back home in 10 seconds...</p>
+    <!-- set time of 10 sec and redirect to log in -->
+    <script>
+        setTimeout(function() {
+          window.location.href = '{{url_for('index')}}';
+        }, 10000); // 10000 milliseconds = 10 seconds
+      </script>
+</div>
+{% endblock %}

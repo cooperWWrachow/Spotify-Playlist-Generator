@@ -1,0 +1,16 @@
+{% extends 'other-main.html' %}
+
+{% block content %}
+
+<div class="home-page">
+    <!-- SET TIMER OF 10 SECONDS then redirect back to begin -->
+    <h5>{{error}}</h5>
+    <p>An empty playlist may have been generated on your account.</p>
+    <p>You will be redirected back home in 15 seconds...</p>
+    <script>
+        setTimeout(function() {
+          window.location.href = '{{url_for('index')}}'; // Replace "home.html" with your home page URL
+        }, 15000); // 10000 milliseconds = 10 seconds
+      </script>
+</div>
+{% endblock %}
