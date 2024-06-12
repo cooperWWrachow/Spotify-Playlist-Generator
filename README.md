@@ -17,7 +17,7 @@ is sped up for the sake of your time, once the user reaches the success page, th
 after 10 seconds. The final result is showcasing the way playlist covers (the color) and titles (a string
 of the first letter in each artist's name) are seen.
 
-![ezgif com-resize (2)](https://github.com/cooperWWrachow/Spotify-Playlist-Generator/assets/135729317/d57ea6a2-864c-469b-abab-a0898177968b)
+![ezgif com-video-to-gif-converter (4)](https://github.com/cooperWWrachow/Spotify-Playlist-Generator/assets/135729317/07ad739f-6dfb-49ee-a15a-f7d0c256b4be)
 
 <br>
 
